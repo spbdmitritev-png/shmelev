@@ -3,66 +3,43 @@ let sessionId;
 let drawnNumbers = [];
 
 function generateQRCode(url) {
-  const canvas = document.getElementById('qrCode');
-  if (!canvas) {
-    console.error('Canvas element not found');
-    document.getElementById('joinUrl').textContent = url;
+  const qrImg = document.getElementById('qrCode');
+  const qrWrapper = document.getElementById('qrWrapper');
+  const joinUrlElement = document.getElementById('joinUrl');
+  
+  if (!qrImg || !qrWrapper) {
+    console.error('QR code elements not found');
+    if (joinUrlElement) {
+      joinUrlElement.textContent = url;
+    }
     return;
   }
 
   // Always show URL
-  document.getElementById('joinUrl').textContent = url;
-
-  if (typeof QRCode === 'undefined') {
-    console.error('QRCode library not loaded, using fallback');
-    // Fallback: use online QR code API
-    const img = document.createElement('img');
-    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
-    img.alt = 'QR Code';
-    img.style.width = '300px';
-    img.style.height = '300px';
-    canvas.parentNode.replaceChild(img, canvas);
-    return;
+  if (joinUrlElement) {
+    joinUrlElement.textContent = url;
   }
 
-  try {
-    // Clear canvas first
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Use online QR code API (reliable and works everywhere)
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+  qrImg.src = qrUrl;
+  qrImg.style.display = 'block';
+  
+  qrImg.onload = () => {
+    console.log('QR Code loaded successfully');
+  };
+  
+  qrImg.onerror = () => {
+    console.error('Failed to load QR code image');
+    // Show URL as fallback
+    if (joinUrlElement) {
+      joinUrlElement.style.fontSize = '1.2rem';
+      joinUrlElement.style.fontWeight = 'bold';
+      joinUrlElement.style.padding = '1rem';
+      joinUrlElement.style.background = 'rgba(255, 255, 255, 0.2)';
+      joinUrlElement.style.borderRadius = '8px';
     }
-    
-    QRCode.toCanvas(canvas, url, {
-      width: 300,
-      margin: 2,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    }, function (error) {
-      if (error) {
-        console.error('QR Code generation error:', error);
-        // Fallback: use online QR code API
-        const img = document.createElement('img');
-        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
-        img.alt = 'QR Code';
-        img.style.width = '300px';
-        img.style.height = '300px';
-        canvas.parentNode.replaceChild(img, canvas);
-      } else {
-        console.log('QR Code generated successfully');
-      }
-    });
-  } catch (error) {
-    console.error('QR Code generation exception:', error);
-    // Fallback: use online QR code API
-    const img = document.createElement('img');
-    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
-    img.alt = 'QR Code';
-    img.style.width = '300px';
-    img.style.height = '300px';
-    canvas.parentNode.replaceChild(img, canvas);
-  }
+  };
 }
 
 async function init() {
@@ -73,28 +50,10 @@ async function init() {
 
   // Generate QR code
   const joinUrl = `${window.location.origin}/join/${sessionId}`;
-  document.getElementById('joinUrl').textContent = joinUrl;
+  console.log('Generating QR code for URL:', joinUrl);
   
-  // Generate QR code if library is loaded
-  if (typeof QRCode !== 'undefined') {
-    generateQRCode(joinUrl);
-  } else {
-    // Wait for library to load
-    const checkQRCode = setInterval(() => {
-      if (typeof QRCode !== 'undefined') {
-        clearInterval(checkQRCode);
-        generateQRCode(joinUrl);
-      }
-    }, 50);
-    
-    // Timeout after 3 seconds
-    setTimeout(() => {
-      clearInterval(checkQRCode);
-      if (typeof QRCode === 'undefined') {
-        console.error('QRCode library failed to load');
-      }
-    }, 3000);
-  }
+  // Generate QR code immediately (using online API)
+  generateQRCode(joinUrl);
 
   // Initialize socket
   socket = io();
@@ -102,6 +61,9 @@ async function init() {
   socket.on('connect', () => {
     document.getElementById('statusText').textContent = '✅ Подключено';
     socket.emit('join_session', { sessionId });
+    updatePlayersCount();
+    // Update players count every 2 seconds
+    setInterval(updatePlayersCount, 2000);
   });
 
   socket.on('disconnect', () => {
@@ -164,6 +126,26 @@ function updateDrawnNumbers() {
   list.innerHTML = drawnNumbers.map(num => 
     `<span class="number-badge">${num}</span>`
   ).join('');
+}
+
+async function updatePlayersCount() {
+  if (!sessionId) return;
+  
+  try {
+    const response = await fetch(`/api/session/${sessionId}/players`);
+    const data = await response.json();
+    const count = data.count || 0;
+    
+    const countElement = document.getElementById('playersCount');
+    const valueElement = document.getElementById('playersCountValue');
+    
+    if (countElement && valueElement) {
+      valueElement.textContent = count;
+      countElement.style.display = 'block';
+    }
+  } catch (error) {
+    console.error('Error updating players count:', error);
+  }
 }
 
 // Initialize when page is ready and QRCode library is loaded

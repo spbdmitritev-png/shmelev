@@ -5,16 +5,22 @@ let marked = Array(5).fill(null).map(() => Array(5).fill(false));
 let isEditing = true;
 
 function init() {
+  console.log('Initializing player page...');
+  
   // Get sessionId from URL
   const path = window.location.pathname;
   sessionId = path.split('/').pop();
+  
+  console.log('Session ID from URL:', sessionId);
 
-  if (!sessionId) {
+  if (!sessionId || sessionId === 'player.html' || sessionId === '') {
+    console.error('Invalid session ID');
     alert('Неверная ссылка');
     return;
   }
 
   // Render card immediately
+  console.log('Rendering card...');
   renderCard();
 
   // Check session exists
@@ -66,7 +72,12 @@ function init() {
   socket.on('session_started', () => {
     isEditing = false;
     document.getElementById('saveBtn').style.display = 'none';
-    document.getElementById('info').style.display = 'block';
+    const infoDiv = document.getElementById('info');
+    if (infoDiv) {
+      infoDiv.style.display = 'block';
+      infoDiv.textContent = 'Игра началась! Числа будут автоматически зачеркиваться.';
+      infoDiv.style.background = 'rgba(255, 255, 255, 0.1)';
+    }
     renderCard();
   });
 
@@ -86,40 +97,45 @@ function renderCard() {
     return;
   }
   
-  container.innerHTML = '';
+  try {
+    container.innerHTML = '';
 
-  for (let i = 0; i < 5; i++) {
-    const row = document.createElement('div');
-    row.className = 'row';
+    for (let i = 0; i < 5; i++) {
+      const row = document.createElement('div');
+      row.className = 'row';
 
-    for (let j = 0; j < 5; j++) {
-      const cell = document.createElement('div');
-      cell.className = `cell ${marked[i][j] ? 'marked' : ''}`;
+      for (let j = 0; j < 5; j++) {
+        const cell = document.createElement('div');
+        cell.className = `cell ${marked[i][j] ? 'marked' : ''}`;
 
-      if (isEditing) {
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.min = '1';
-        input.max = '90';
-        input.value = card[i][j] > 0 ? card[i][j] : '';
-        input.className = 'input';
-        input.placeholder = '';
-        input.oninput = (e) => handleCardChange(i, j, e.target.value);
-        cell.appendChild(input);
-      } else {
-        const number = document.createElement('div');
-        number.className = 'number';
-        number.textContent = card[i][j] > 0 ? card[i][j] : '';
-        cell.appendChild(number);
+        if (isEditing) {
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.min = '1';
+          input.max = '90';
+          input.value = card[i][j] > 0 ? card[i][j] : '';
+          input.className = 'input';
+          input.placeholder = '';
+          input.oninput = (e) => handleCardChange(i, j, e.target.value);
+          cell.appendChild(input);
+        } else {
+          const number = document.createElement('div');
+          number.className = 'number';
+          number.textContent = card[i][j] > 0 ? card[i][j] : '';
+          cell.appendChild(number);
+        }
+
+        row.appendChild(cell);
       }
 
-      row.appendChild(cell);
+      container.appendChild(row);
     }
-
-    container.appendChild(row);
+    
+    console.log('Card rendered successfully:', container.children.length, 'rows');
+  } catch (error) {
+    console.error('Error rendering card:', error);
+    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: white;">Ошибка отображения карточки</div>';
   }
-  
-  console.log('Card rendered:', container.children.length, 'rows');
 }
 
 function handleCardChange(row, col, value) {
@@ -172,6 +188,7 @@ async function saveCard() {
   if (!validateCard() || !sessionId) return;
 
   try {
+    console.log('Saving card for session:', sessionId);
     const response = await fetch(`/api/session/${sessionId}/card`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -184,18 +201,48 @@ async function saveCard() {
       return;
     }
 
+    console.log('Card saved successfully. Player ID:', data.id, 'Total players:', data.totalPlayers);
     isEditing = false;
     document.getElementById('saveBtn').style.display = 'none';
     renderCard();
+    
+    // Show success message
+    const infoDiv = document.getElementById('info');
+    if (infoDiv) {
+      infoDiv.style.display = 'block';
+      infoDiv.textContent = `Карточка сохранена! Ожидайте начала игры. (Игроков в сессии: ${data.totalPlayers || '?'})`;
+      infoDiv.style.background = 'rgba(76, 175, 80, 0.3)';
+    }
   } catch (error) {
+    console.error('Error saving card:', error);
     showErrors(['Ошибка при сохранении карточки']);
   }
 }
 
 // Initialize when DOM is ready
+function startInit() {
+  console.log('Starting initialization...');
+  console.log('Document ready state:', document.readyState);
+  
+  const cardContainer = document.getElementById('card');
+  if (!cardContainer) {
+    console.error('Card container not found in DOM');
+    return;
+  }
+  
+  try {
+    init();
+  } catch (error) {
+    console.error('Initialization error:', error);
+    cardContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: white;">Ошибка загрузки. Проверьте консоль браузера.</div>';
+  }
+}
+
+// Wait for DOM and scripts to be ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', startInit);
 } else {
-  init();
+  // DOM already loaded, but wait a bit for scripts
+  setTimeout(startInit, 100);
 }
 

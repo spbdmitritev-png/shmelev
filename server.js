@@ -16,7 +16,15 @@ const io = new Server(httpServer, {
 const PORT = process.env.PORT || 3000;
 
 // Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
 app.use(express.json());
 
 // API Routes
@@ -30,7 +38,13 @@ app.get('/api/session/:id', (req, res) => {
   if (!session) {
     return res.status(404).json({ error: 'Session not found' });
   }
-  res.json(session);
+  const players = gameStore.getPlayersBySession(req.params.id);
+  res.json({ ...session, playerCount: players.length });
+});
+
+app.get('/api/session/:id/players', (req, res) => {
+  const players = gameStore.getPlayersBySession(req.params.id);
+  res.json({ count: players.length, players: players.map(p => ({ id: p.id })) });
 });
 
 app.post('/api/session/:id/card', (req, res) => {
@@ -70,9 +84,11 @@ app.post('/api/session/:id/card', (req, res) => {
     return res.status(404).json({ error: 'Session not found' });
   }
 
-  // Create player
+  // Create player (no limit on number of players)
   const player = gameStore.createPlayer(id, card);
-  res.json(player);
+  const players = gameStore.getPlayersBySession(id);
+  console.log(`New player created. Total players in session ${id}: ${players.length}`);
+  res.json({ ...player, totalPlayers: players.length });
 });
 
 // Serve HTML pages

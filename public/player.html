@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bingo Player</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/styles.css">
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
@@ -17,7 +17,9 @@
 
     <div id="errors" class="errors" style="display: none;"></div>
 
-    <div class="card" id="card"></div>
+    <div class="card" id="card">
+      <!-- Card will be rendered here by JavaScript -->
+    </div>
 
     <button id="saveBtn" onclick="saveCard()" class="save-button">
       Сохранить карточку
@@ -28,7 +30,7 @@
     </div>
   </div>
 
-  <script src="player.js"></script>
+  <script src="/player.js"></script>
 </body>
 </html>
 
