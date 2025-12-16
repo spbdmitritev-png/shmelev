@@ -98,6 +98,7 @@ function renderCard() {
           input.value = card[i][j] > 0 ? card[i][j] : '';
           input.className = 'input';
           input.placeholder = '';
+          input.maxLength = 2; // Allow 2 digits
           input.oninput = (e) => handleCardChange(i, j, e.target.value);
           cell.appendChild(input);
         } else {
@@ -125,8 +126,28 @@ function renderCard() {
 }
 
 function handleCardChange(row, col, value) {
-  const num = parseInt(value) || 0;
-  card[row][col] = num;
+  // Allow empty value while typing
+  if (value === '' || value === null) {
+    card[row][col] = 0;
+    hideErrors();
+    duplicateCells = [];
+    renderCard();
+    return;
+  }
+  
+  const num = parseInt(value);
+  // Only update if it's a valid number between 1 and 90
+  if (!isNaN(num) && num >= 1 && num <= 90) {
+    card[row][col] = num;
+  } else if (!isNaN(num) && num > 90) {
+    // If user types number > 90, limit it to 90
+    card[row][col] = 90;
+    const input = document.querySelector(`.row:nth-child(${row + 1}) .cell:nth-child(${col + 1}) input`);
+    if (input) {
+      input.value = 90;
+    }
+  }
+  
   hideErrors();
   duplicateCells = []; // Clear duplicates when user changes input
   renderCard(); // Re-render to remove red highlighting

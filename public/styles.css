@@ -261,9 +261,11 @@ input {
   justify-content: center;
   transition: all 0.3s;
   border: 2px solid transparent;
-  min-height: 50px;
-  min-width: 50px;
+  min-height: 55px;
+  min-width: 55px;
   user-select: none;
+  padding: 4px;
+  box-sizing: border-box;
 }
 
 .cell.clickable {
@@ -316,10 +318,20 @@ input {
   border: none;
   background: transparent;
   text-align: center;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: bold;
   color: white;
   outline: none;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+
+.input::-webkit-inner-spin-button,
+.input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .input::-webkit-inner-spin-button,
