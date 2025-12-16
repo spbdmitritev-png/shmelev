@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bingo Host</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="container host-container">
+    <h1 class="title">Bingo Host</h1>
+    
+    <div class="status" id="status">
+      Статус подключения: <span id="statusText">❌ Отключено</span>
+    </div>
+
+    <div class="qr-section">
+      <h2>QR-код для подключения</h2>
+      <div class="qr-wrapper">
+        <canvas id="qrCode" width="300" height="300"></canvas>
+      </div>
+      <p class="url" id="joinUrl"></p>
+    </div>
+
+    <div class="controls">
+      <button id="startBtn" onclick="startGame()" class="button">
+        Начать игру
+      </button>
+      <button id="drawBtn" onclick="drawNumber()" class="button" style="display: none;">
+        Следующее число
+      </button>
+      <button id="resetBtn" onclick="resetGame()" class="button-secondary" style="display: none;">
+        Начать заново
+      </button>
+    </div>
+
+    <div id="lastNumber" class="last-number" style="display: none;">
+      <div class="last-number-label">Последнее число:</div>
+      <div class="last-number-value" id="lastNumberValue"></div>
+    </div>
+
+    <div id="drawnNumbers" class="drawn-numbers" style="display: none;">
+      <h3>Выпавшие числа (<span id="drawnCount">0</span>)</h3>
+      <div class="numbers-list" id="numbersList"></div>
+    </div>
+  </div>
+
+  <script src="host.js"></script>
+</body>
+</html>
+

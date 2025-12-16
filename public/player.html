@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bingo Player</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="container player-container">
+    <h1 class="title">Bingo</h1>
+    
+    <div class="status" id="status">
+      <span id="statusText">❌ Отключено</span>
+    </div>
+
+    <div id="errors" class="errors" style="display: none;"></div>
+
+    <div class="card" id="card"></div>
+
+    <button id="saveBtn" onclick="saveCard()" class="save-button">
+      Сохранить карточку
+    </button>
+
+    <div id="info" class="info" style="display: none;">
+      Игра началась! Числа будут автоматически зачеркиваться.
+    </div>
+  </div>
+
+  <script src="player.js"></script>
+</body>
+</html>
+
