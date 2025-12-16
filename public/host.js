@@ -1,6 +1,5 @@
 let socket;
 let sessionId;
-let drawnNumbers = [];
 
 function generateQRCode(url) {
   const qrImg = document.getElementById('qrCode');
@@ -70,25 +69,16 @@ async function init() {
     document.getElementById('statusText').textContent = '❌ Отключено';
   });
 
-  socket.on('number_drawn', (data) => {
-    drawnNumbers = data.drawnNumbers;
-    updateLastNumber(data.number);
-    updateDrawnNumbers();
-  });
-
   socket.on('session_started', () => {
     document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('drawBtn').style.display = 'inline-block';
     document.getElementById('resetBtn').style.display = 'inline-block';
+    document.getElementById('gameInfo').style.display = 'block';
   });
 
   socket.on('session_reset', () => {
-    drawnNumbers = [];
-    document.getElementById('lastNumber').style.display = 'none';
-    document.getElementById('drawnNumbers').style.display = 'none';
     document.getElementById('startBtn').style.display = 'inline-block';
-    document.getElementById('drawBtn').style.display = 'none';
     document.getElementById('resetBtn').style.display = 'none';
+    document.getElementById('gameInfo').style.display = 'none';
   });
 }
 
@@ -98,34 +88,10 @@ function startGame() {
   }
 }
 
-function drawNumber() {
-  if (socket && sessionId) {
-    socket.emit('draw_number', { sessionId });
-  }
-}
-
 function resetGame() {
   if (socket && sessionId) {
     socket.emit('reset_game', { sessionId });
   }
-}
-
-function updateLastNumber(number) {
-  document.getElementById('lastNumber').style.display = 'block';
-  document.getElementById('lastNumberValue').textContent = number;
-}
-
-function updateDrawnNumbers() {
-  const container = document.getElementById('drawnNumbers');
-  const list = document.getElementById('numbersList');
-  const count = document.getElementById('drawnCount');
-  
-  container.style.display = 'block';
-  count.textContent = drawnNumbers.length;
-  
-  list.innerHTML = drawnNumbers.map(num => 
-    `<span class="number-badge">${num}</span>`
-  ).join('');
 }
 
 async function updatePlayersCount() {

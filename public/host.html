@@ -31,22 +31,13 @@
       <button id="startBtn" onclick="startGame()" class="button">
         Начать игру
       </button>
-      <button id="drawBtn" onclick="drawNumber()" class="button" style="display: none;">
-        Следующее число
-      </button>
       <button id="resetBtn" onclick="resetGame()" class="button-secondary" style="display: none;">
         Начать заново
       </button>
     </div>
 
-    <div id="lastNumber" class="last-number" style="display: none;">
-      <div class="last-number-label">Последнее число:</div>
-      <div class="last-number-value" id="lastNumberValue"></div>
-    </div>
-
-    <div id="drawnNumbers" class="drawn-numbers" style="display: none;">
-      <h3>Выпавшие числа (<span id="drawnCount">0</span>)</h3>
-      <div class="numbers-list" id="numbersList"></div>
+    <div id="gameInfo" class="info" style="display: none; text-align: center; margin-top: 2rem; padding: 1rem; background: rgba(255, 255, 255, 0.1); border-radius: 8px;">
+      Игра началась! Читайте числа вслух, игроки будут отмечать их на своих карточках.
     </div>
   </div>
 

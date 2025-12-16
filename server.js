@@ -124,21 +124,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('draw_number', (data) => {
-    if (data.sessionId) {
-      const number = gameStore.drawNumber(data.sessionId);
-      if (number !== null) {
-        gameStore.markNumberOnPlayerCards(data.sessionId, number);
-        
-        const session = gameStore.getSession(data.sessionId);
-        io.to(data.sessionId).emit('number_drawn', {
-          number,
-          drawnNumbers: session?.drawnNumbers || [],
-        });
-      }
-    }
-  });
-
   socket.on('reset_game', (data) => {
     if (data.sessionId) {
       const session = gameStore.updateSession(data.sessionId, {

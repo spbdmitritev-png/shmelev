@@ -49,33 +49,13 @@ function init() {
     document.getElementById('statusText').textContent = '❌ Отключено';
   });
 
-  socket.on('number_drawn', (data) => {
-    const number = data.number;
-    let found = false;
-    const newMarked = marked.map(row => [...row]);
-
-    for (let i = 0; i < 5; i++) {
-      for (let j = 0; j < 5; j++) {
-        if (card[i][j] === number) {
-          newMarked[i][j] = true;
-          found = true;
-        }
-      }
-    }
-
-    if (found) {
-      marked = newMarked;
-      renderCard();
-    }
-  });
-
   socket.on('session_started', () => {
     isEditing = false;
     document.getElementById('saveBtn').style.display = 'none';
     const infoDiv = document.getElementById('info');
     if (infoDiv) {
       infoDiv.style.display = 'block';
-      infoDiv.textContent = 'Игра началась! Числа будут автоматически зачеркиваться.';
+      infoDiv.textContent = 'Игра началась! Нажимайте на числа, которые называет ведущий.';
       infoDiv.style.background = 'rgba(255, 255, 255, 0.1)';
     }
     renderCard();
@@ -123,6 +103,10 @@ function renderCard() {
           number.className = 'number';
           number.textContent = card[i][j] > 0 ? card[i][j] : '';
           cell.appendChild(number);
+          
+          // Make cell clickable to mark/unmark
+          cell.classList.add('clickable');
+          cell.onclick = () => toggleMark(i, j);
         }
 
         row.appendChild(cell);
@@ -142,6 +126,13 @@ function handleCardChange(row, col, value) {
   const num = parseInt(value) || 0;
   card[row][col] = num;
   hideErrors();
+}
+
+function toggleMark(row, col) {
+  if (isEditing) return; // Can't mark during editing
+  
+  marked[row][col] = !marked[row][col];
+  renderCard();
 }
 
 function validateCard() {

@@ -263,6 +263,16 @@ input {
   border: 2px solid transparent;
   min-height: 50px;
   min-width: 50px;
+  user-select: none;
+}
+
+.cell.clickable {
+  cursor: pointer;
+}
+
+.cell.clickable:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
 .cell.marked {
