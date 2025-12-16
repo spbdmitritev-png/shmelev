@@ -92,14 +92,20 @@ function renderCard() {
 
         if (isEditing) {
           const input = document.createElement('input');
-          input.type = 'number';
-          input.min = '1';
-          input.max = '90';
+          input.type = 'text';
+          input.inputMode = 'numeric';
+          input.pattern = '[0-9]*';
           input.value = card[i][j] > 0 ? card[i][j] : '';
           input.className = 'input';
           input.placeholder = '';
           input.maxLength = 2; // Allow 2 digits
-          input.oninput = (e) => handleCardChange(i, j, e.target.value);
+          input.onblur = (e) => handleCardChange(i, j, e.target.value);
+          input.onkeyup = (e) => {
+            // Only update on blur or Enter, not on every keystroke
+            if (e.key === 'Enter') {
+              e.target.blur();
+            }
+          };
           cell.appendChild(input);
         } else {
           const number = document.createElement('div');
@@ -127,30 +133,51 @@ function renderCard() {
 
 function handleCardChange(row, col, value) {
   // Allow empty value while typing
-  if (value === '' || value === null) {
+  if (value === '' || value === null || value === undefined) {
     card[row][col] = 0;
     hideErrors();
     duplicateCells = [];
-    renderCard();
+    return; // Don't re-render on empty, let user continue typing
+  }
+  
+  // Remove any non-numeric characters
+  const cleanValue = value.replace(/[^0-9]/g, '');
+  if (cleanValue === '') {
+    card[row][col] = 0;
+    hideErrors();
+    duplicateCells = [];
     return;
   }
   
-  const num = parseInt(value);
+  const num = parseInt(cleanValue);
+  
   // Only update if it's a valid number between 1 and 90
   if (!isNaN(num) && num >= 1 && num <= 90) {
     card[row][col] = num;
   } else if (!isNaN(num) && num > 90) {
     // If user types number > 90, limit it to 90
     card[row][col] = 90;
-    const input = document.querySelector(`.row:nth-child(${row + 1}) .cell:nth-child(${col + 1}) input`);
-    if (input) {
-      input.value = 90;
-    }
+    // Update the input value
+    setTimeout(() => {
+      const container = document.getElementById('card');
+      if (container) {
+        const rows = container.querySelectorAll('.row');
+        if (rows[row]) {
+          const cells = rows[row].querySelectorAll('.cell');
+          if (cells[col]) {
+            const input = cells[col].querySelector('input');
+            if (input) {
+              input.value = 90;
+            }
+          }
+        }
+      }
+    }, 0);
   }
   
   hideErrors();
   duplicateCells = []; // Clear duplicates when user changes input
-  renderCard(); // Re-render to remove red highlighting
+  // Don't re-render on every change, only on blur
 }
 
 function toggleMark(row, col) {
