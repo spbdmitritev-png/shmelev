@@ -3,6 +3,7 @@ let sessionId;
 let card = Array(5).fill(null).map(() => Array(5).fill(0));
 let marked = Array(5).fill(null).map(() => Array(5).fill(false));
 let isEditing = true;
+let duplicateCells = []; // Array of {row, col} for duplicate numbers
 
 function init() {
   console.log('Initializing player page...');
@@ -86,7 +87,8 @@ function renderCard() {
 
       for (let j = 0; j < 5; j++) {
         const cell = document.createElement('div');
-        cell.className = `cell ${marked[i][j] ? 'marked' : ''}`;
+        const isDuplicate = duplicateCells.some(d => d.row === i && d.col === j);
+        cell.className = `cell ${marked[i][j] ? 'marked' : ''} ${isDuplicate ? 'duplicate' : ''}`;
 
         if (isEditing) {
           const input = document.createElement('input');
@@ -126,6 +128,8 @@ function handleCardChange(row, col, value) {
   const num = parseInt(value) || 0;
   card[row][col] = num;
   hideErrors();
+  duplicateCells = []; // Clear duplicates when user changes input
+  renderCard(); // Re-render to remove red highlighting
 }
 
 function toggleMark(row, col) {
@@ -138,7 +142,11 @@ function toggleMark(row, col) {
 function validateCard() {
   const errors = [];
   const allNumbers = [];
+  duplicateCells = []; // Reset duplicates
 
+  // First pass: collect all numbers and find duplicates
+  const numberPositions = {}; // Map number -> array of {row, col}
+  
   for (let i = 0; i < 5; i++) {
     for (let j = 0; j < 5; j++) {
       const num = card[i][j];
@@ -152,13 +160,29 @@ function validateCard() {
         showErrors(errors);
         return false;
       }
-      if (allNumbers.includes(num)) {
-        errors.push('Числа не должны повторяться');
-        showErrors(errors);
-        return false;
+      
+      // Track positions of each number
+      if (!numberPositions[num]) {
+        numberPositions[num] = [];
       }
-      allNumbers.push(num);
+      numberPositions[num].push({ row: i, col: j });
     }
+  }
+
+  // Find all duplicate numbers
+  for (const num in numberPositions) {
+    if (numberPositions[num].length > 1) {
+      // This number appears multiple times
+      duplicateCells.push(...numberPositions[num]);
+    }
+  }
+
+  // If there are duplicates, highlight them and show error
+  if (duplicateCells.length > 0) {
+    errors.push('Найдены повторяющиеся числа. Исправьте выделенные красным клетки.');
+    showErrors(errors);
+    renderCard(); // Re-render to show red highlighting
+    return false;
   }
 
   hideErrors();
