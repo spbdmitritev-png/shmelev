@@ -24,12 +24,26 @@ function init() {
   console.log('Rendering card...');
   renderCard();
 
-  // Check session exists
+  // Check session exists and status
   fetch(`/api/session/${sessionId}`)
     .then(res => res.json())
     .then(data => {
       if (data.error) {
         showErrors(['Сессия не найдена']);
+        return;
+      }
+      
+      // If game has already started, block new players
+      if (data.status === 'active') {
+        isEditing = false;
+        document.getElementById('saveBtn').style.display = 'none';
+        const infoDiv = document.getElementById('info');
+        if (infoDiv) {
+          infoDiv.style.display = 'block';
+          infoDiv.textContent = 'Игра уже началась. Новые игроки не могут подключиться.';
+          infoDiv.style.background = 'rgba(244, 67, 54, 0.3)';
+        }
+        renderCard();
         return;
       }
     })
@@ -151,12 +165,12 @@ function handleCardChange(row, col, value) {
   
   const num = parseInt(cleanValue);
   
-  // Only update if it's a valid number between 1 and 90
-  if (!isNaN(num) && num >= 1 && num <= 90) {
+  // Only update if it's a valid number between 1 and 80
+  if (!isNaN(num) && num >= 1 && num <= 80) {
     card[row][col] = num;
-  } else if (!isNaN(num) && num > 90) {
-    // If user types number > 90, limit it to 90
-    card[row][col] = 90;
+  } else if (!isNaN(num) && num > 80) {
+    // If user types number > 80, limit it to 80
+    card[row][col] = 80;
     // Update the input value
     setTimeout(() => {
       const container = document.getElementById('card');
@@ -167,7 +181,7 @@ function handleCardChange(row, col, value) {
           if (cells[col]) {
             const input = cells[col].querySelector('input');
             if (input) {
-              input.value = 90;
+              input.value = 80;
             }
           }
         }
@@ -203,8 +217,8 @@ function validateCard() {
         showErrors(errors);
         return false;
       }
-      if (num < 1 || num > 90) {
-        errors.push('Числа должны быть от 1 до 90');
+      if (num < 1 || num > 80) {
+        errors.push('Числа должны быть от 1 до 80');
         showErrors(errors);
         return false;
       }

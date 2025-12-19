@@ -61,8 +61,8 @@ app.post('/api/session/:id/card', (req, res) => {
       return res.status(400).json({ error: 'Invalid card format' });
     }
     for (const num of row) {
-      if (typeof num !== 'number' || num < 1 || num > 90) {
-        return res.status(400).json({ error: 'Numbers must be between 1 and 90' });
+      if (typeof num !== 'number' || num < 1 || num > 80) {
+        return res.status(400).json({ error: 'Numbers must be between 1 and 80' });
       }
     }
   }
@@ -82,6 +82,11 @@ app.post('/api/session/:id/card', (req, res) => {
   const session = gameStore.getSession(id);
   if (!session) {
     return res.status(404).json({ error: 'Session not found' });
+  }
+
+  // Check if game has already started
+  if (session.status === 'active') {
+    return res.status(400).json({ error: 'Игра уже началась. Новые игроки не могут подключиться.' });
   }
 
   // Create player (no limit on number of players)
